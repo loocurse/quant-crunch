@@ -6,9 +6,15 @@ name = "pypi"
 [packages]
 flask = "*"
 python-dotenv = "*"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+polygon-api-client = "*"
 
 [dev-packages]
 black = "==21.5b0"
 
 [requires]
 python_version = "3.9"
+
+[scripts]
+start = "python main.py"
