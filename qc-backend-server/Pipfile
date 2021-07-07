@@ -4,11 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flask = "*"
 python-dotenv = "*"
 fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
-polygon-api-client = "*"
+redis = "*"
+pyrebase = "*"
 
 [dev-packages]
 black = "==21.5b0"
