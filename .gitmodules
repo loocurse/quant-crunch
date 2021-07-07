@@ -1,3 +1,9 @@
 [submodule "qc-trading-sim"]
 	path = qc-trading-sim
 	url = https://github.com/loocurse/qc-trading-sim.git
+	
+[submodule "tingyew-qc"]
+	path = tingyew-qc
+	url = https://github.com/ktingyew/Code-Server
+
+	
