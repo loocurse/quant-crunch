@@ -1,4 +1,5 @@
 from enum import Enum
+from requests import Session
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -11,6 +12,7 @@ from database import Database
 class FastAPIExtended(FastAPI):
     redis: Redis
     db: Database
+    session: Session
 
 
 class RequestExtended(Request):

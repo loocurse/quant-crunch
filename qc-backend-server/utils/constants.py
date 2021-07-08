@@ -1,5 +1,5 @@
 from enum import auto
-from custom_types import AutoName
+from .custom_types import AutoName
 
 
 class Tickers(str, AutoName):
