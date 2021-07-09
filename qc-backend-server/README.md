@@ -2,7 +2,6 @@
 
 ## TODO
 
-- [ ] Store retrieved data from API using Redis or some other db
 - [ ] Provide API for frontend
 - [ ] Logging
 

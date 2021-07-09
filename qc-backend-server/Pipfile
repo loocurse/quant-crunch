@@ -8,10 +8,12 @@ python-dotenv = "*"
 fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 redis = "*"
-pyrebase = "*"
+polygon-api-client = "*"
+odmantic = "*"
 
 [dev-packages]
 black = "==21.5b0"
+datamodel-code-generator = "*"
 
 [requires]
 python_version = "3.9"

@@ -1,4 +1,6 @@
+import os
 from enum import auto
+
 from .custom_types import AutoName
 
 
@@ -11,3 +13,6 @@ class Tickers(str, AutoName):
     C = auto()
     BX = auto()
     TSLA = auto()
+
+
+API_KEY = os.getenv("POLYGON_API_KEY")

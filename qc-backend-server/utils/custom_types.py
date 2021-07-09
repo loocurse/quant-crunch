@@ -1,18 +1,19 @@
 from enum import Enum
-from requests import Session
 
 from fastapi import FastAPI
-from pydantic import BaseModel
+from odmantic import AIOEngine
+from polygon import RESTClient
+from polygon.rest.models.definitions import Definition
 from redis import Redis
 from starlette.requests import Request
 
-from database import Database
+from .models import SnapshotModel, TickerlistModel
 
 
 class FastAPIExtended(FastAPI):
     redis: Redis
-    db: Database
-    session: Session
+    db: AIOEngine
+    polygon: RESTClient
 
 
 class RequestExtended(Request):
@@ -24,7 +25,32 @@ class AutoName(Enum):
         return name
 
 
-class Signal(BaseModel):
-    timestamp: str
-    signal: str
-    price: int
+class ReferenceTickerDetails(Definition):
+    active: str
+    bloomberg: str
+    ceo: str
+    cik: str
+    country: str
+    description: str
+    employees: str
+    exchange: str
+    exchangeSymbol: str
+    figi: str
+    hq_address: str
+    hq_country: str
+    hq_state: str
+    industry: str
+    lei: str
+    listdate: str
+    logo: str
+    marketcap: str
+    name: str
+    phone: str
+    sector: str
+    sic: str
+    similar: str
+    symbol: str
+    tags: str
+    type: str
+    updated: str
+    url: str
