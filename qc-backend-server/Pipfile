@@ -9,7 +9,7 @@ fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 redis = "*"
 polygon-api-client = "*"
-odmantic = "*"
+pymongo = "*"
 
 [dev-packages]
 black = "==21.5b0"

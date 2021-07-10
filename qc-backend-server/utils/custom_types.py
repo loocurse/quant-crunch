@@ -1,19 +1,25 @@
 from enum import Enum
 
 from fastapi import FastAPI
-from odmantic import AIOEngine
-from polygon import RESTClient
+from polygon import RESTClient, WebSocketClient
 from polygon.rest.models.definitions import Definition
+from pymongo.database import Database
 from redis import Redis
 from starlette.requests import Request
 
-from .models import SnapshotModel, TickerlistModel
+from .models import (
+    SnapshotModel,
+    TickerlistModel,
+    TickersMongoModel,
+    AggregateMinuteModel,
+)
 
 
 class FastAPIExtended(FastAPI):
     redis: Redis
-    db: AIOEngine
+    db: Database
     polygon: RESTClient
+    socket: WebSocketClient
 
 
 class RequestExtended(Request):

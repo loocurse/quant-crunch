@@ -34,7 +34,7 @@ def get_ticker_list(request: RequestExtended):
 
 
 @api_router.get("/predictions")
-def get_predictions(request: RequestExtended):
+def get_predictions(request: RequestExtended, limit: int = 50):
     """
     {
         date: [
@@ -44,6 +44,33 @@ def get_predictions(request: RequestExtended):
                 currentPrice: ,
             }
         ],
+    }
+    """
+    results = request.app.db.recommendations.find().limit(limit)
+    pass
+
+
+@api_router.get("/performance")
+def get_performance(request: RequestExtended):
+    """
+    {
+        performance: [
+            {
+                month: "July 2021",
+                realized_pnl: 2.33,
+                positions: [
+                    {
+                        ticker: "AAPL",
+                        buy: 100,
+                        sell: 150,
+                        pnl, 50,
+                        notes: "reached target price"
+                    },
+                    ...
+                ]
+            },
+            ...
+        ]
     }
     """
     pass

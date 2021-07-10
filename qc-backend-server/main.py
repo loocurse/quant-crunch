@@ -1,5 +1,5 @@
-import asyncio
 import os
+from pathlib import Path
 
 import uvicorn
 from dotenv import load_dotenv
@@ -10,14 +10,9 @@ load_dotenv()
 app = create_app()
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    config = uvicorn.Config(
-        app,
+    uvicorn.run(
+        f"{Path(__file__).stem}:app",
         host="0.0.0.0",
         port=5050,
-        loop=loop,
-        reload=os.getenv("MODE") == "DEV"
-        and os.getenv("RELOAD"),  # doesn't seem to work
+        reload=os.getenv("MODE") == "DEV" and os.getenv("RELOAD"),
     )
-    server = uvicorn.Server(config)
-    loop.run_until_complete(server.serve())

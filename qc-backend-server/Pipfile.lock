@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9165a1822380f637283b5ee690665a5cea06a24261de87a075f1cc96ae20d17c"
+            "sha256": "f6a650f64c1539da35f71633fee71e4799c67a61cd572d828af272b8a51f0ad6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -90,22 +90,6 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==2.10"
-        },
-        "motor": {
-            "hashes": [
-                "sha256:319df35ef9d4099dc125b7d46b552fa88578675e0b06cab94624c666bb0a8a90",
-                "sha256:ea5a8f5c7cbb08b7c301d7c66746fc96333d634182df236dff0f814f802fe232"
-            ],
-            "markers": "python_full_version >= '3.5.2'",
-            "version": "==2.3.1"
-        },
-        "odmantic": {
-            "hashes": [
-                "sha256:ba62c0c51c224d0d2cfe3684cc7ace4c1fde55bf7631630e1dbe2bd08c6e0b6c",
-                "sha256:fe820dc414ecefdc4288f1d57005f6630ee1e720c114d291a1de1dba4e816c57"
-            ],
-            "index": "pypi",
-            "version": "==0.3.5"
         },
         "polygon-api-client": {
             "hashes": [
@@ -210,6 +194,7 @@
                 "sha256:fedf0dee7a412ca6d1d6d92c158fe9cbaa8ea0cae90d268f9ccc0744de7a97d0",
                 "sha256:fffff7bfb6799a763d3742c59c6ee7ffadda21abed557637bc44ed1080876484"
             ],
+            "index": "pypi",
             "version": "==3.11.4"
         },
         "python-dotenv": {
@@ -485,7 +470,7 @@
                 "sha256:eed17b53c3e7912425579853d078a0832820f023191561fcee9d7cae424e0813",
                 "sha256:f65ce5bd4cbc6abdfbe29afc2f0245538ab358c14590912df638033f157d555e"
             ],
-            "markers": "python_version < '4' and python_full_version >= '3.6.1'",
+            "markers": "python_version < '4.0' and python_full_version >= '3.6.1'",
             "version": "==5.9.2"
         },
         "jinja2": {
