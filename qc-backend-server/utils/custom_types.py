@@ -8,10 +8,15 @@ from redis import Redis
 from starlette.requests import Request
 
 from .models import (
+    AggregateMinuteModel,
+    ClosedPositionModel,
+    OpenPositionModel,
+    OpenPositionMongoModel,
+    RecommendationsModel,
+    RecommendationsMongoModel,
     SnapshotModel,
     TickerlistModel,
     TickersMongoModel,
-    AggregateMinuteModel,
 )
 
 

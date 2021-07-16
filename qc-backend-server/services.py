@@ -1,13 +1,22 @@
 import json
 import os
 import threading
+from datetime import datetime, timezone
 
-from pymongo import MongoClient
 from polygon import STOCKS_CLUSTER, RESTClient, WebSocketClient
+from pymongo import MongoClient
 from pymongo.database import Database
+from redis import Redis
 
 from utils.constants import API_KEY, Tickers
-from utils.custom_types import FastAPIExtended, TickersMongoModel, AggregateMinuteModel
+from utils.custom_types import (
+    AggregateMinuteModel,
+    ClosedPositionModel,
+    FastAPIExtended,
+    OpenPositionModel,
+    RecommendationsMongoModel,
+    TickersMongoModel,
+)
 
 
 def get_tickers_metadata(app: FastAPIExtended) -> dict[str, dict[str, str]]:
@@ -31,27 +40,37 @@ def init_db():
     return db
 
 
-def init_watcher(db: Database):
+def init_watcher(app: FastAPIExtended):
     class RecommendationWatcher(threading.Thread):
-        def __init__(self, db: Database):
+        def __init__(self, db: Database, redis: Redis):
             threading.Thread.__init__(self)
             self.event = threading.Event()
             self.db = db
+            self.redis = redis
 
         def run(self):
             with self.db.recommendations.watch() as stream:
                 while stream.alive:
-                    if document := stream.try_next():
-                        print(
-                            document
-                        )  # dict -> keys to get: 'fullDocument', operationType == 'insert'
+                    if new_change := stream.try_next():
+                        if new_change.get("operationType") == "insert":
+                            document = RecommendationsMongoModel(
+                                **new_change.get("fullDocument")
+                            )
+                            document.set_fields()
+                            open_positions = [
+                                i.dict() for i in document.recommendations
+                            ]
+                            self.redis.rpush(
+                                "open_positions",
+                                *[json.dumps(i) for i in open_positions],
+                            )
+                            self.db.open_positions.insert_many(open_positions)
                         continue
-                    # TODO add new recommendations as open positions
                     self.event.wait(10)
                     if self.event.is_set():
                         break
 
-    watcher = RecommendationWatcher(db)
+    watcher = RecommendationWatcher(app.db, app.redis)
     watcher.start()
     return watcher
 
@@ -61,21 +80,58 @@ def init_polygon():
     return client
 
 
-def init_socket():
+def init_socket(app: FastAPIExtended):
     # TODO
     # receive minute based price update from socket
-    # check if there are any open positions from recommendations
-    # if there are open positions:
-    #    check if either of the target price/stop loss price has been reached
-    #    if reached:
-    #        record the price and marked the position as closed
-    #        add the entry into the database
 
+    # AM for aggregate minute
+    # A for aggregate second
     AGGREGATE_MINUTE_PARAMS = [f"AM.{i}" for i in Tickers]
 
     def parse_am_response(response: AggregateMinuteModel):
-        # check for open positions in db/redis
-        print(response)
+        # check if there are any open positions from recommendations
+        # if there are open positions:
+        #    check if either of the target price/stop loss price has been reached
+        #    if reached:
+        #        record the price and marked the position as closed
+        #        remove the open entry from redis and db
+        #        add the marked entry into the database
+        open_positions_redis = app.redis.lrange("open_positions", 0, -1)
+        open_positions = [
+            OpenPositionModel(**json.loads(i)) for i in open_positions_redis
+        ]
+        for i, position in enumerate(open_positions):
+            if position.symbol == response.sym:
+                pnl, notes = None, None
+                if (
+                    position.target_price >= response.l
+                    and position.target_price <= response.h
+                ):
+                    pnl = position.target_price - position.currentPrice
+                    notes = "Reached target price"
+                elif (
+                    position.stop_loss >= response.l
+                    and position.stop_loss <= response.h
+                ):
+                    pnl = position.stop_loss - position.currentPrice
+                    notes = "Reached stop loss"
+                else:
+                    continue
+
+                close_timestamp = datetime.fromtimestamp(
+                    response.e / 1000, tzinfo=timezone.utc
+                )
+                closed_position = ClosedPositionModel(
+                    **position.dict(),
+                    pnl=pnl,
+                    notes=notes,
+                    close_timestamp=close_timestamp,
+                )
+                app.redis.lrem("open_positions", 1, open_positions_redis[i])
+                app.db.open_positions.delete_one(
+                    position.dict(include=["sym, us_timestamp"])
+                )
+                app.db.performance.insert_one(closed_position.dict())
 
     def process_message_callback(response: str):
         messages: list[dict] = json.loads(response)

@@ -20,7 +20,7 @@ def create_app():
         app.redis = Redis()
         app.polygon = init_polygon()
         app.db = init_db()
-        app.watcher = init_watcher(app.db)
+        app.watcher = init_watcher(app)
         get_tickers_metadata(app)
         app.socket = None
         # app.socket = init_socket()
