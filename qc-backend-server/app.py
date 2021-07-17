@@ -22,8 +22,8 @@ def create_app():
         app.db = init_db()
         app.watcher = init_watcher(app)
         get_tickers_metadata(app)
-        app.socket = None
-        # app.socket = init_socket()
+        # app.socket = None
+        app.socket = init_socket(app)
 
     @app.on_event("shutdown")
     def shutdown_event():

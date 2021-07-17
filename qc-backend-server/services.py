@@ -82,7 +82,7 @@ def init_polygon():
 
 def init_socket(app: FastAPIExtended):
     # TODO
-    # receive minute based price update from socket
+    # test implementation
 
     # AM for aggregate minute
     # A for aggregate second
@@ -103,24 +103,16 @@ def init_socket(app: FastAPIExtended):
         for i, position in enumerate(open_positions):
             if position.symbol == response.sym:
                 pnl, notes = None, None
-                if (
-                    position.target_price >= response.l
-                    and position.target_price <= response.h
-                ):
-                    pnl = position.target_price - position.currentPrice
+                if response.l <= position.target_price <= response.h:
+                    pnl = position.target_price - position.entry_price
                     notes = "Reached target price"
-                elif (
-                    position.stop_loss >= response.l
-                    and position.stop_loss <= response.h
-                ):
-                    pnl = position.stop_loss - position.currentPrice
+                elif response.l <= position.stop_loss <= response.h:
+                    pnl = position.stop_loss - position.entry_price
                     notes = "Reached stop loss"
                 else:
                     continue
 
-                close_timestamp = datetime.fromtimestamp(
-                    response.e / 1000, tzinfo=timezone.utc
-                )
+                close_timestamp = response.e / 1000
                 closed_position = ClosedPositionModel(
                     **position.dict(),
                     pnl=pnl,
@@ -129,9 +121,29 @@ def init_socket(app: FastAPIExtended):
                 )
                 app.redis.lrem("open_positions", 1, open_positions_redis[i])
                 app.db.open_positions.delete_one(
-                    position.dict(include=["sym, us_timestamp"])
+                    position.dict(include=["sym, open_timestamp"])
                 )
-                app.db.performance.insert_one(closed_position.dict())
+                """
+                Schema for db.performance
+                {
+                    _id,
+                    month: July 2021,
+                    positions: [
+                        {closed_position_1},
+                        {closed_position_2}
+                    ]
+                }
+                """
+                month_timestamp = (
+                    datetime.fromtimestamp(close_timestamp, tz=timezone.utc)
+                    .replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                    .timestamp()
+                )
+                app.db.performance.find_one_and_update(
+                    {"month": month_timestamp},
+                    {"$push": {"positions": closed_position.dict()}},
+                    upsert=True,
+                )
 
     def process_message_callback(response: str):
         messages: list[dict] = json.loads(response)

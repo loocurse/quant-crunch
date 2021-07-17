@@ -8,6 +8,7 @@ from utils.custom_types import (
     RequestExtended,
     SnapshotModel,
     TickerlistModel,
+    OpenPositionModel,
 )
 
 api_router = APIRouter()
@@ -39,11 +40,12 @@ def get_recommendations(request: RequestExtended, limit: int = 50):
     """
     results = request.app.db.recommendations.find().sort("_id", -1).limit(100)
     results = [RecommendationsMongoModel(**i) for i in results]
-    recent_recommendations = []
+    recent_recommendations: list[OpenPositionModel] = []
     for period in results:
         period.set_fields()
         recent_recommendations.extend(period.recommendations)
     recent_recommendations = recent_recommendations[:limit]
+    print(recent_recommendations[0].json())
     return {"results": recent_recommendations}
 
 

@@ -13,20 +13,11 @@ ny_tz = timezone("America/New_York")
 
 class OpenPosition(BaseModel):
     symbol: str
-    target_price: float
+    target_price: float = Field(alias="targetPrice")
     entry_price: float = Field(alias="currentPrice")
-    open_timestamp: Optional[int]
-    stop_loss: Optional[float]
-    expected_profit: Optional[float]
-
-    # The property decorator does not get serialized
-    # @property
-    # def stopLoss(self) -> float:
-    #     return self.entryPrice * 0.9
-
-    # @property
-    # def expectedProfit(self) -> float:
-    #     return (self.targetPrice - self.entryPrice) / self.entryPrice * 100
+    open_timestamp: Optional[int] = Field(alias="openTimestamp")
+    stop_loss: Optional[float] = Field(alias="stopLoss")
+    expected_profit: Optional[float] = Field(alias="expectedProfit")
 
 
 class RecommendationsMongo(BaseModel):
@@ -62,4 +53,4 @@ class OpenPositionMongo(OpenPosition):
 class ClosedPosition(OpenPosition):
     pnl: float
     notes: str
-    close_timestamp: int
+    close_timestamp: int = Field(alias="closeTimestamp")
