@@ -5,3 +5,7 @@
 [submodule "tingyew-qc"]
 	path = tingyew-qc
 	url = https://github.com/ktingyew/Code-Server
+	
+[submodule "model-integration"]
+	path = model-integration
+	url = https://github.com/Mickey1356/quantcrunch-models.git
