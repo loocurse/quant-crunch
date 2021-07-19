@@ -9,7 +9,7 @@ fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 redis = "*"
 polygon-api-client = "*"
-pymongo = "*"
+pymongo = {extras = ["srv"], version = "*"}
 pytz = "*"
 
 [dev-packages]
@@ -20,3 +20,4 @@ python_version = "3.9"
 
 [scripts]
 start = "python main.py"
+generate = "bash -c \"pipenv lock -r > requirements.txt\""

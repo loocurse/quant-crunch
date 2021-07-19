@@ -40,3 +40,12 @@ python main.py
 ```
 localhost:5050/docs
 ```
+
+## Docker Setup
+
+```sh
+git clone https://github.com/loocurse/quant-crunch.git
+cd quant-crunch/qc-backend-server
+vim .env
+sudo docker-compose up -d
+```

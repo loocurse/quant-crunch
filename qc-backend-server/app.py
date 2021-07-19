@@ -17,7 +17,7 @@ def create_app():
 
     @app.on_event("startup")
     def startup_event():
-        app.redis = Redis()
+        app.redis = Redis(host="redis", port=6379)
         app.polygon = init_polygon()
         app.db = init_db()
         app.watcher = init_watcher(app)
