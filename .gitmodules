@@ -6,6 +6,6 @@
 	path = tingyew-qc
 	url = https://github.com/ktingyew/Code-Server
 	
-[submodule "jeremy-models"]
+[submodule "model-integration"]
 	path = model-integration
 	url = https://github.com/Mickey1356/quantcrunch-models.git
