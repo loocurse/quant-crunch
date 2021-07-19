@@ -149,7 +149,7 @@ def init_socket(app: FastAPIExtended):
         messages: list[dict] = json.loads(response)
         for message in messages:
             if os.getenv("MODE") == "DEV":
-                print(message)
+                print(message, flush=True)  # requires flush when working in docker
             if message.get("ev") == "AM":
                 parse_am_response(AggregateMinuteModel(**message))
 
