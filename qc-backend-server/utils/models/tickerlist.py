@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -13,9 +13,9 @@ class TickerlistItem(BaseModel):
     name: str
     exchange: str
     symbol: str
-    change: float
-    changePerc: float
+    change: Optional[float]
+    change_perc: Optional[float]
 
 
-class Model(BaseModel):
+class TickerlistResponse(BaseModel):
     tickerlist: List[TickerlistItem]

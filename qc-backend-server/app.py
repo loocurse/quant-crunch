@@ -24,7 +24,6 @@ def create_app():
         app.db = init_db()
         app.watcher = init_watcher(app)
         init_redis_data(app)
-        # app.socket = None
         app.socket = init_socket(app)
 
     @app.on_event("shutdown")

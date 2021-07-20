@@ -49,3 +49,16 @@ cd quant-crunch/qc-backend-server
 vim .env
 sudo docker-compose up -d
 ```
+
+Things to set in `.env`
+
+```
+POLYGON_API_KEY=
+MONGO_ATLAS_URI=
+```
+
+If you're using a reverse proxy like `nginx`, you might need to set the
+`ROOT_PATH` variable to the appropriate url prefix.
+
+If you're not running the application via `docker-compose`, you might want to set `REDIS_HOST` to the
+appropriate url like `localhost`.

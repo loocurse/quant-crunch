@@ -12,10 +12,12 @@ from .models import (
     ClosedPositionModel,
     OpenPositionModel,
     OpenPositionMongoModel,
-    RecommendationsModel,
+    PerformanceMongoModel,
+    PerformanceResponse,
     RecommendationsMongoModel,
+    RecommendationsResponse,
     SnapshotModel,
-    TickerlistModel,
+    TickerlistResponse,
     TickersMongoModel,
 )
 

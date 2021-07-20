@@ -16,4 +16,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=5050,
         reload=os.getenv("MODE") == "DEV" and os.getenv("RELOAD"),
+        root_path=os.getenv("ROOT_PATH") or "/",
     )

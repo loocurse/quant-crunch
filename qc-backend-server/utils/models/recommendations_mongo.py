@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 from pytz import timezone
@@ -11,20 +11,29 @@ from .pyobjectid import PyObjectId
 ny_tz = timezone("America/New_York")
 
 
-class OpenPosition(BaseModel):
+class PositionFromRecommendation(BaseModel):
     symbol: str
     target_price: float = Field(alias="targetPrice")
     entry_price: float = Field(alias="currentPrice")
-    open_timestamp: Optional[int] = Field(alias="openTimestamp")
-    stop_loss: Optional[float] = Field(alias="stopLoss")
-    expected_profit: Optional[float] = Field(alias="expectedProfit")
+
+
+class Position(BaseModel):
+    symbol: str
+    target_price: float
+    entry_price: float
+    open_timestamp: Optional[float]
+    stop_loss: Optional[float]
+
+
+class OpenPosition(Position):
+    expected_profit: Optional[float]
 
 
 class RecommendationsMongo(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id")
     us_date: str = Field(alias="us-date")
     sg_date: str = Field(alias="sg-date")
-    recommendations: Optional[list[OpenPosition]]
+    recommendations: Optional[list[Union[PositionFromRecommendation, OpenPosition]]]
 
     @property
     def timestamp(self) -> float:
@@ -32,7 +41,10 @@ class RecommendationsMongo(BaseModel):
 
     def set_fields(self):
         if self.recommendations:
-            for recommendation in self.recommendations:
+            new_recommendations = [
+                OpenPosition(**i.dict()) for i in self.recommendations
+            ]  # basically convert PositionFromRecommendation to OpenPosition cause 'entryPrice' is shown as 'currentPrice'
+            for recommendation in new_recommendations:
                 recommendation.open_timestamp = self.timestamp
                 recommendation.stop_loss = recommendation.entry_price * 0.9
                 recommendation.expected_profit = (
@@ -40,6 +52,7 @@ class RecommendationsMongo(BaseModel):
                     / recommendation.entry_price
                     * 100
                 )
+            self.recommendations = new_recommendations
 
 
 class RecommendationsResponse(BaseModel):
@@ -49,11 +62,8 @@ class RecommendationsResponse(BaseModel):
 class OpenPositionMongo(OpenPosition):
     id: Optional[PyObjectId] = Field(alias="_id")
 
-    class Config:
-        allow_population_by_field_name = True
-
 
 class ClosedPosition(OpenPosition):
     pnl: float
     notes: str
-    close_timestamp: int = Field(alias="closeTimestamp")
+    close_timestamp: float

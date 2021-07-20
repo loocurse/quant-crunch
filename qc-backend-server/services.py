@@ -129,6 +129,7 @@ def init_socket(app: FastAPIExtended):
                 else:
                     continue
 
+                pnl = pnl / position.entry_price * 100
                 close_timestamp = response.e / 1000
                 closed_position = ClosedPositionModel(
                     **position.dict(),
@@ -140,17 +141,6 @@ def init_socket(app: FastAPIExtended):
                 app.db.open_positions.delete_one(
                     position.dict(include=["sym, open_timestamp"])
                 )
-                """
-                Schema for db.performance
-                {
-                    _id,
-                    month: July 2021,
-                    positions: [
-                        {closed_position_1},
-                        {closed_position_2}
-                    ]
-                }
-                """
                 month_timestamp = (
                     datetime.fromtimestamp(close_timestamp, tz=timezone.utc)
                     .replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -158,7 +148,10 @@ def init_socket(app: FastAPIExtended):
                 )
                 app.db.performance.find_one_and_update(
                     {"month": month_timestamp},
-                    {"$push": {"positions": closed_position.dict()}},
+                    {
+                        "$push": {"positions": closed_position.dict()},
+                        "$inc": {"realized_pnl": pnl},
+                    },
                     upsert=True,
                 )
 
