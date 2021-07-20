@@ -121,15 +121,18 @@ def init_socket(app: FastAPIExtended):
             if position.symbol == response.sym:
                 pnl, notes = None, None
                 if response.l <= position.target_price <= response.h:
-                    pnl = position.target_price - position.entry_price
+                    pnl = position.expected_profit
                     notes = "Reached target price"
                 elif response.l <= position.stop_loss <= response.h:
-                    pnl = position.stop_loss - position.entry_price
+                    pnl = (
+                        (position.stop_loss - position.entry_price)
+                        / position.entry_price
+                        * 100
+                    )
                     notes = "Reached stop loss"
                 else:
                     continue
 
-                pnl = pnl / position.entry_price * 100
                 close_timestamp = response.e / 1000
                 closed_position = ClosedPositionModel(
                     **position.dict(),
@@ -139,7 +142,7 @@ def init_socket(app: FastAPIExtended):
                 )
                 app.redis.lrem("open_positions", 1, open_positions_redis[i])
                 app.db.open_positions.delete_one(
-                    position.dict(include=["sym, open_timestamp"])
+                    position.dict(include={"symbol", "open_timestamp"})
                 )
                 month_timestamp = (
                     datetime.fromtimestamp(close_timestamp, tz=timezone.utc)

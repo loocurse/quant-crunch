@@ -63,7 +63,10 @@ class OpenPositionMongo(OpenPosition):
     id: Optional[PyObjectId] = Field(alias="_id")
 
 
-class ClosedPosition(OpenPosition):
+class ClosedPosition(Position):
     pnl: float
     notes: str
     close_timestamp: float
+
+    class Config:
+        extra = "ignore"
