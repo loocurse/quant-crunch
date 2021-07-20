@@ -49,6 +49,9 @@ class RecommendationsResponse(BaseModel):
 class OpenPositionMongo(OpenPosition):
     id: Optional[PyObjectId] = Field(alias="_id")
 
+    class Config:
+        allow_population_by_field_name = True
+
 
 class ClosedPosition(OpenPosition):
     pnl: float

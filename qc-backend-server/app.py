@@ -5,9 +5,9 @@ from redis import Redis
 
 from routers import api_router
 from services import (
-    get_tickers_metadata,
     init_db,
     init_polygon,
+    init_redis_data,
     init_socket,
     init_watcher,
 )
@@ -23,7 +23,7 @@ def create_app():
         app.polygon = init_polygon()
         app.db = init_db()
         app.watcher = init_watcher(app)
-        get_tickers_metadata(app)
+        init_redis_data(app)
         # app.socket = None
         app.socket = init_socket(app)
 

@@ -8,3 +8,7 @@ services:
       - .:/app
   redis:
     image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./redis:/data
+      - ./redis-dump:/var/lib/redis

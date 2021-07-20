@@ -16,6 +16,7 @@ from utils.custom_types import (
     OpenPositionModel,
     RecommendationsMongoModel,
     TickersMongoModel,
+    OpenPositionMongoModel,
 )
 
 
@@ -31,6 +32,22 @@ def get_tickers_metadata(app: FastAPIExtended) -> dict[str, dict[str, str]]:
         return tickers_metadata
     else:
         return json.loads(tickers_metadata)
+
+
+def init_redis_data(app: FastAPIExtended):
+    get_tickers_metadata(app)
+    db_open_positions = app.db.open_positions.count_documents({})
+    redis_open_positions = app.redis.llen("open_positions")
+    if db_open_positions != redis_open_positions:
+        open_positions = [
+            OpenPositionMongoModel(**i) for i in app.db.open_positions.find()
+        ]
+        app.redis.delete("open_positions")
+        if open_positions:
+            app.redis.rpush(
+                "open_positions",
+                *[json.dumps(i.dict(exclude={"id"})) for i in open_positions],
+            )
 
 
 def init_db():
