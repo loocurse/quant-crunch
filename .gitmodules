@@ -1,6 +1,7 @@
 [submodule "qc-trading-sim"]
 	path = qc-trading-sim
 	url = https://github.com/loocurse/qc-trading-sim.git
+    branch = recommender
 	
 [submodule "tingyew-qc"]
 	path = tingyew-qc
