@@ -67,6 +67,3 @@ class ClosedPosition(Position):
     pnl: float
     notes: str
     close_timestamp: float
-
-    class Config:
-        extra = "ignore"

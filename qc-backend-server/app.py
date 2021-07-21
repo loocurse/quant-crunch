@@ -1,12 +1,10 @@
-import os
-
 from fastapi import FastAPI
-from redis import Redis
 
 from routers import api_router
 from services import (
     init_db,
     init_polygon,
+    init_redis,
     init_redis_data,
     init_socket,
     init_watcher,
@@ -19,7 +17,7 @@ def create_app():
 
     @app.on_event("startup")
     def startup_event():
-        app.redis = Redis(host=os.getenv("REDIS_HOST") or "redis", port=6379)
+        app.redis = init_redis()
         app.polygon = init_polygon()
         app.db = init_db()
         app.watcher = init_watcher(app)

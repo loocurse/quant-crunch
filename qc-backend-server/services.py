@@ -34,6 +34,14 @@ def get_tickers_metadata(app: FastAPIExtended) -> dict[str, dict[str, str]]:
         return json.loads(tickers_metadata)
 
 
+def init_redis():
+    if (redis_url := os.getenv("REDIS_URL")) is None:
+        redis = Redis(host=os.getenv("REDIS_HOST") or "redis", port=6379)
+    else:  # for heroku
+        redis = Redis.from_url(redis_url)
+    return redis
+
+
 def init_redis_data(app: FastAPIExtended):
     get_tickers_metadata(app)
     db_open_positions = app.db.open_positions.count_documents({})
