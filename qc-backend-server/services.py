@@ -1,8 +1,11 @@
+import asyncio
 import json
 import os
 import threading
 from datetime import datetime, timezone
 
+import alpaca_trade_api
+from alpaca_trade_api.entity import Entity
 from polygon import STOCKS_CLUSTER, RESTClient, WebSocketClient
 from pymongo import MongoClient
 from pymongo.database import Database
@@ -14,9 +17,9 @@ from utils.custom_types import (
     ClosedPositionModel,
     FastAPIExtended,
     OpenPositionModel,
+    OpenPositionMongoModel,
     RecommendationsMongoModel,
     TickersMongoModel,
-    OpenPositionMongoModel,
 )
 
 
@@ -65,37 +68,116 @@ def init_db():
     return db
 
 
+class Alpaca:
+    def __init__(self, db: Database, redis: Redis) -> None:
+        self.rest = alpaca_trade_api.REST()
+        self.stream = alpaca_trade_api.Stream()
+        self.db = db
+        self.redis = redis
+
+    async def __trade_updates_callback(self, update: Entity):
+        if update.event == "fill":
+            order: dict = update.order
+            side = order["side"]
+            symbol = order["symbol"]
+            capital = float(self.redis.hget(symbol, "capital"))
+            total_cost = float(order["filled_qty"]) * float(order["filled_avg_price"])
+
+            if side == "buy":
+                new_capital = capital - total_cost
+                self.redis.hmset(
+                    symbol,
+                    {
+                        "buy_order": json.dumps(order),
+                        "capital": new_capital,
+                        "state": "sell",
+                    },
+                )
+                pass
+            elif side == "sell":
+                new_capital = capital + total_cost
+                buy_order = json.loads(self.redis.hget(symbol, "buy_order"))
+                buy_price = buy_order["filled_avg_price"]
+                pnl = (float(order["filled_avg_price"]) - buy_price) / buy_price * 100
+                self.db.alpaca.find_one_and_update(
+                    {"month": order["filled_at"][:7]},
+                    {
+                        "$push": {
+                            "positions": {
+                                "buy_order": buy_order,
+                                "sell_order": order,
+                                "pnl": pnl,
+                            }
+                        }
+                    },
+                    upsert=True,
+                )
+                self.redis.hmset(symbol, {"capital": new_capital, "state": "buy"})
+
+        pass
+
+    def buy_stock(self, recommendation: OpenPositionModel, capital: float):
+        self.rest.submit_order(
+            symbol=recommendation.symbol,
+            side="buy",
+            type="market",
+            time_in_force="gtc",
+            qty=capital // recommendation.entry_price,
+            order_class="bracket",
+            take_profit={"limit_price": recommendation.target_price},
+            stop_loss={"stop_price": recommendation.stop_loss},
+        )
+
+    def run(self):
+        self.stream.subscribe_trade_updates(self.__trade_updates_callback)
+        asyncio.create_task(self.stream._run_forever())
+
+
+class RecommendationWatcher(threading.Thread):
+    def __init__(self, db: Database, redis: Redis, alpaca: Alpaca):
+        threading.Thread.__init__(self)
+        self.event = threading.Event()
+        self.db = db
+        self.redis = redis
+        self.alpaca = alpaca
+
+    def run(self):
+        with self.db.recommendations.watch() as stream:
+            while stream.alive:
+                if new_change := stream.try_next():
+                    if new_change.get("operationType") == "insert":
+                        document = RecommendationsMongoModel(
+                            **new_change.get("fullDocument")
+                        )
+                        document.set_fields()
+                        open_positions = [i.dict() for i in document.recommendations]
+                        self.redis.rpush(
+                            "open_positions",
+                            *[json.dumps(i) for i in open_positions],
+                        )
+                        # self.db.open_positions.insert_many(open_positions)
+
+                        for recommendation in document.recommendations:
+                            if (
+                                str(self.redis.hget(recommendation.symbol, "state"))
+                                == "buy"
+                            ):
+                                capital = float(
+                                    self.redis.hget(recommendation.symbol, "capital")
+                                )
+                                self.alpaca.buy_stock(recommendation, capital)
+                    continue
+                self.event.wait(10)
+                if self.event.is_set():
+                    break
+
+
+def init_alpaca(app: FastAPIExtended):
+    return Alpaca(app.db, app.redis)
+
+
 def init_watcher(app: FastAPIExtended):
-    class RecommendationWatcher(threading.Thread):
-        def __init__(self, db: Database, redis: Redis):
-            threading.Thread.__init__(self)
-            self.event = threading.Event()
-            self.db = db
-            self.redis = redis
-
-        def run(self):
-            with self.db.recommendations.watch() as stream:
-                while stream.alive:
-                    if new_change := stream.try_next():
-                        if new_change.get("operationType") == "insert":
-                            document = RecommendationsMongoModel(
-                                **new_change.get("fullDocument")
-                            )
-                            document.set_fields()
-                            open_positions = [
-                                i.dict() for i in document.recommendations
-                            ]
-                            self.redis.rpush(
-                                "open_positions",
-                                *[json.dumps(i) for i in open_positions],
-                            )
-                            self.db.open_positions.insert_many(open_positions)
-                        continue
-                    self.event.wait(10)
-                    if self.event.is_set():
-                        break
-
-    watcher = RecommendationWatcher(app.db, app.redis)
+    watcher = RecommendationWatcher(app.db, app.redis, app.alpaca)
     watcher.start()
     return watcher
 
