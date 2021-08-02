@@ -159,7 +159,7 @@ class RecommendationWatcher(threading.Thread):
 
                         for recommendation in document.recommendations:
                             if (
-                                str(self.redis.hget(recommendation.symbol, "state"))
+                                self.redis.hget(recommendation.symbol, "state").decode()
                                 == "buy"
                             ):
                                 capital = float(

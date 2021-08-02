@@ -25,11 +25,8 @@ def create_app():
         app.redis = init_redis()
         app.polygon = init_polygon()
         app.db = init_db()
-        app.watcher = init_watcher(app)
-        # alpaca_stream = alpaca_trade_api.Stream()
-        # alpaca_stream.subscribe_trade_updates(trade_updates_callback)
-        # task = asyncio.create_task(alpaca_stream._run_forever())
         app.alpaca = init_alpaca(app)
+        app.watcher = init_watcher(app)
         app.alpaca.run()
         init_redis_data(app)
         app.socket = None
