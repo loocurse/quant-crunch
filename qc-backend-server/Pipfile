@@ -11,6 +11,7 @@ redis = "*"
 polygon-api-client = "*"
 pymongo = {extras = ["srv"], version = "*"}
 pytz = "*"
+alpaca-trade-api = "*"
 
 [dev-packages]
 black = "==21.5b0"
