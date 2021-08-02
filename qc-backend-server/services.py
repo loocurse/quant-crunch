@@ -97,7 +97,7 @@ class Alpaca:
             elif side == "sell":
                 new_capital = capital + total_cost
                 buy_order = json.loads(self.redis.hget(symbol, "buy_order"))
-                buy_price = buy_order["filled_avg_price"]
+                buy_price = float(buy_order["filled_avg_price"])
                 pnl = (float(order["filled_avg_price"]) - buy_price) / buy_price * 100
                 self.db.alpaca.find_one_and_update(
                     {"month": order["filled_at"][:7]},
@@ -162,6 +162,8 @@ class RecommendationWatcher(threading.Thread):
                                 self.redis.hget(recommendation.symbol, "state").decode()
                                 == "buy"
                             ):
+                                if recommendation.expected_profit < 0.5:
+                                    continue
                                 capital = float(
                                     self.redis.hget(recommendation.symbol, "capital")
                                 )
