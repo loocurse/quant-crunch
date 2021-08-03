@@ -128,7 +128,13 @@ class Alpaca:
             stop_loss={"stop_price": recommendation.stop_loss},
         )
 
+    def init_redis_data(self):
+        for ticker in Tickers:
+            if self.redis.hget(ticker, "state") is None:
+                self.redis.hmset(ticker, {"state": "buy", "capital": 10000})
+
     def run(self):
+        self.init_redis_data()
         self.stream.subscribe_trade_updates(self.__trade_updates_callback)
         asyncio.create_task(self.stream._run_forever())
 
